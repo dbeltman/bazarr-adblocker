@@ -1,6 +1,15 @@
-import srt, re
-filepath='test/srt/test.nl.srt'
-subtitle_generator = srt.parse(open(filepath))
+import srt
+import re
+import argparse
+
+# Main Args
+parser = argparse.ArgumentParser()
+parser.add_argument("filepath", type=str, metavar='filepath', help="Path of subtitle file")
+#filepath='test/srt/test.nl.srt'dd
+
+args= parser.parse_args()
+
+subtitle_generator = srt.parse(open(args.filepath))
 subtitles= list(subtitle_generator)
 urlregex='https?://\S+|WWW\.\S+'
 counter=0
@@ -11,5 +20,5 @@ for sub in subtitles:
         subtitles.pop(sub.index-counter)
 
 print(srt.compose(subtitles))
-finalfile = open("{}.forced.srt".format(filepath.split(".srt")[0]), "w")
+finalfile = open("{}.forced.srt".format(args.filepath.split(".srt")[0]), "w")
 finalfile.write(srt.compose(subtitles))
