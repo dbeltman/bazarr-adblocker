@@ -11,7 +11,7 @@ args= parser.parse_args()
 
 subtitle_generator = srt.parse(open(args.filepath))
 subtitles= list(subtitle_generator)
-urlregex='https?://\S+|WWW\.\S+'
+urlregex='https?://\S+|WWW\.\S+|\.nl\S+'
 counter=0
 for sub in subtitles:
     if re.search(urlregex, sub.content):
