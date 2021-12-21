@@ -1,24 +1,56 @@
 import srt
 import re
 import argparse
-
+from wordfilter import Wordfilter
 # Main Args
 parser = argparse.ArgumentParser()
 parser.add_argument("filepath", type=str, metavar='filepath', help="Path of subtitle file")
+parser.add_argument("-rw", "--writemode", action='store_true', help="Write mode, `true` or `false`")
+parser.add_argument("-v", "--verbose", action='store_true', help="Verbose mode, prints the SRT to console")
+parser.add_argument("-vv", "--superverbose", action='store_true', help="SuperVerbose mode, prints all handled strings to conolse")
+
 #filepath='test/srt/test.nl.srt'dd
 
 args= parser.parse_args()
 
-subtitle_generator = srt.parse(open(args.filepath))
-subtitles= list(subtitle_generator)
-urlregex='https?://\S+|WWW\.\S+|\.nl\S+'
-counter=0
-for sub in subtitles:
-    if re.search(urlregex, sub.content):
-        counter+=1
-        print("FOUND ILLEGAL STRING: " + sub.content + " INDEX: " + str(sub.index))
-        subtitles.pop(sub.index-counter)
+naughtywordlist=["https",
+    "www.",
+    ".nl",
+    ".com",
+    "facebook",
+    "twitter",
+    "youtube",
+    "8k",
+    "kodi"]
+wordfilter = Wordfilter()
+wordfilter.clearList()
+wordfilter.addWords(naughtywordlist)
 
-print(srt.compose(subtitles))
-finalfile = open("{}.forced.srt".format(args.filepath.split(".srt")[0]), "w")
-finalfile.write(srt.compose(subtitles))
+subtitle_generator = srt.parse(open(args.filepath))
+dirtysubs = list(subtitle_generator)
+
+# counter=0
+cleansubs=dirtysubs.copy()
+
+for sub in dirtysubs:
+    print("\n##########   HANDLING SUBTITLE ID " + str(sub.index))
+    if wordfilter.blacklisted(sub.content.lower()):
+        # counter+=1
+        print("String \n\n'" + sub.content + "'\n\nwas declared ILLEGAL!\n########## \n")
+        # print("\nFOUND ILLEGAL STRING: \n`" + sub.content + "`\nINDEX: " + str(sub.index))
+        cleansubs.remove(sub)
+    else:
+        if args.superverbose:
+            print("String \n\n'" + sub.content + "'\n\nwas declared OKAY!\n########## \n")
+            # print("String \n'" + sub.content + "'\n##########   was declared OKAY!\n")
+
+if args.verbose:
+    print("### COMPOSED SRT ###")
+    print(srt.compose(cleansubs))
+
+if args.writemode:
+    print("Writing file")
+    finalfile = open("{}.forced.srt".format(args.filepath.split(".srt")[0]), "w")
+    finalfile.write(srt.compose(cleansubs))
+else:
+    print("\nWrite mode not set, NOT writing to file.")
