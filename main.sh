@@ -1,8 +1,5 @@
 #!/bin/bash
-if [[ $(whoami) != "root" ]] ; then
-    echo "NOT RUNNING AS ROOT"
-    exit 1
-fi
 cd /scripts/postprocess
-pip3 install -r /scripts/postprocess/requirements.txt
-python3 /scripts/postprocess/main.py -rw "$1"
+pip3 install --prefix=/tmp/local -r /scripts/postprocess/requirements.txt
+echo $1
+python3 /scripts/postprocess/main.py -rw "`realpath -s "$1"`"

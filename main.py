@@ -2,6 +2,8 @@ import srt
 import re
 import argparse
 from wordfilter import Wordfilter
+import os    
+from chardet import detect
 # Main Args
 parser = argparse.ArgumentParser()
 parser.add_argument("filepath", type=str, metavar='filepath', help="Path of subtitle file")
@@ -25,9 +27,29 @@ naughtywordlist=["https",
 wordfilter = Wordfilter()
 wordfilter.clearList()
 wordfilter.addWords(naughtywordlist)
+# get file encoding type
+def get_encoding_type(file):
+    with open(file, 'rb') as f:
+        rawdata = f.read()
+    return detect(rawdata)['encoding']
 
-subtitle_generator = srt.parse(open(args.filepath))
+from_codec = get_encoding_type(args.filepath)
+print("CODEC: " + str(from_codec))
+# add try: except block for reliability
+try: 
+    with open(args.filepath, 'r', encoding=from_codec) as f, open(args.filepath + ".utf8", 'w', encoding='utf-8') as e:
+        text = f.read() # for small files, for big use chunks
+        e.write(text)
+
+    #os.rename(trgfile, srcfile) # rename new encoding
+except UnicodeDecodeError:
+    print('Decode Error')
+except UnicodeEncodeError:
+    print('Encode Error')
+#exit (1)
+subtitle_generator = srt.parse(open(args.filepath + ".utf8"))
 dirtysubs = list(subtitle_generator)
+
 
 # counter=0
 cleansubs=dirtysubs.copy()
@@ -52,5 +74,6 @@ if args.writemode:
     print("Writing file")
     finalfile = open("{}.forced.srt".format(args.filepath.split(".srt")[0]), "w")
     finalfile.write(srt.compose(cleansubs))
+    os.remove(args.filepath + ".utf8") # remove old encoding file
 else:
     print("\nWrite mode not set, NOT writing to file.")
