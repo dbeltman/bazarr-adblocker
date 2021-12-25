@@ -1,5 +1,5 @@
 #!/bin/bash
 cd /scripts/postprocess
-pip3 install --prefix=/tmp/local -r /scripts/postprocess/requirements.txt
+PYTHONUSERBASE=/config/pipcache/ pip3 install --prefix=/config/pipcache --no-cache-dir -r /scripts/postprocess/requirements.txt
 echo $1
-python3 /scripts/postprocess/main.py -rw "`realpath -s "$1"`"
+PYTHONUSERBASE=/config/pipcache/ python3 /scripts/postprocess/main.py -rw "`realpath -s "$1"`"
