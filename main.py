@@ -1,3 +1,4 @@
+from distutils.command.clean import clean
 import srt
 import re
 import argparse
@@ -55,7 +56,8 @@ dirtysubs = list(subtitle_generator)
 cleansubs=dirtysubs.copy()
 
 for sub in dirtysubs:
-    print("\n##########   HANDLING SUBTITLE ID " + str(sub.index))
+    if args.verbose:    
+        print("\n##########   HANDLING SUBTITLE ID " + str(sub.index))
     if wordfilter.blacklisted(sub.content.lower()):
         # counter+=1
         print("String \n\n'" + sub.content + "'\n\nwas declared ILLEGAL!\n########## \n")
@@ -73,6 +75,9 @@ if args.verbose:
 if args.writemode:
     print("Writing file")
     finalfile = open("{}.forced.srt".format(args.filepath.split(".srt")[0]), "w")
+    finalfile.write(srt.compose(dirtysubs))
+    os.remove(args.filepath) # remove old encoding file
+    finalfile = open(args.filepath, "w")
     finalfile.write(srt.compose(cleansubs))
     os.remove(args.filepath + ".utf8") # remove old encoding file
 else:
